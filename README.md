@@ -17,6 +17,8 @@ SmartFlow AI is a powerful, highly scalable SaaS boilerplate designed to unify c
     <img src="https://skillicons.dev/icons?i=ts,react,tailwind,nodejs,mysql,redis,github&theme=dark" alt="Tech Stack" />
   </a>
 </p>
+
+---
 *   **Dark UI/UX Landing Page:** A modern, animated hero section with Framer Motion and quick social channel integration buttons (WhatsApp, Telegram, Messenger, Email).
 *   **BYOK Architecture:** Built-in multi-AI provider router supporting OpenAI, Gemini, and Manus AI. Automatic fallback logic ensures 100% uptime if a provider fails or rate-limits.
 *   **Omnichannel Integration:**
