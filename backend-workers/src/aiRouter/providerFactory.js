@@ -2,8 +2,9 @@ import * as openaiAdapter from './adapters/openaiAdapter.js';
 import * as geminiAdapter from './adapters/geminiAdapter.js';
 import * as groqAdapter from './adapters/groqAdapter.js';
 import * as manusAdapter from './adapters/manusAdapter.js';
+import * as xaiAdapter from './adapters/xaiAdapter.js';
 
-const ADAPTERS = { openai: openaiAdapter, gemini: geminiAdapter, groq: groqAdapter, manus: manusAdapter };
+const ADAPTERS = { openai: openaiAdapter, gemini: geminiAdapter, groq: groqAdapter, manus: manusAdapter, xai: xaiAdapter };
 export const SUPPORTED_PROVIDERS = Object.keys(ADAPTERS);
 
 export function getAdapter(provider) {
