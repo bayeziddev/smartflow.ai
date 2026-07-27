@@ -1,5 +1,11 @@
 # Fanchatbot — BYOK Multi-Channel AI Automation Platform
 
+**Lost track of where things stand? Read `docs/CASE-STUDY.md` first** —
+it's the full project journal: what's built, what's broken, every
+Meta/Cloudflare account involved and why, and the prioritized list of
+what to fix next. Everything below is quick-start setup; that file is
+the "what actually happened and what's still open" reference.
+
 A multi-tenant chatbot gateway. Tenants connect WhatsApp, Telegram, Messenger,
 and Email, and bring their own OpenAI / Gemini / Groq (LLaMA 3.1) / Manus API
 key. This platform is the router and the dashboard — it never pays your
@@ -7,12 +13,16 @@ tenants' AI bill for them.
 
 ```
 fanchatbot-system/
-├── backend/     Node.js + Express API, AES-256-GCM key storage, AI router,
-│                channel handlers (see backend/README.md for the full detail)
-├── frontend/    React + Vite + Tailwind dashboard and landing page
+├── backend/           Node.js + Express version — needs a VPS (see backend/README.md)
+├── backend-workers/   Cloudflare Workers version — no VPS needed, uses Hyperdrive
+│                      (see backend-workers/README.md — this is the one to use if
+│                      you don't have/want a VPS)
+├── frontend/    React + Vite + Tailwind dashboard and landing page (logged-in app)
+├── marketing/   Public sales page — lifetime deal + Facebook Pixel (see marketing/README.md)
 └── docs/
     ├── DEPLOYMENT.md          Cloudflare setup + ongoing operations guide
-    ├── marketing-banner.png   1200×630 launch/social-preview image
+    ├── CHANNELS.md            WABA vs unofficial WhatsApp, real costs, free Meta setup steps
+    ├── marketing-banner.png   1200×630 launch/social-preview image (also used as the site's Open Graph image)
     ├── workflow-diagram.png   Message → reply logic flow, for docs or investors
     └── *.html                 source files for the two images above — open
                                 either in a browser and re-screenshot after
@@ -79,9 +89,12 @@ Short version:
 3. **Telegram/Email webhooks**: add a shared-secret check before these
    are reachable from the public internet — see the comments in
    `webhook.routes.js`.
-4. **WhatsApp storage**: `.wwebjs_auth/` must live on persistent disk.
-   An ephemeral container that wipes on restart will force a fresh QR
-   scan every deploy.
+4. **WhatsApp**: use the official Cloud API (`whatsappCloudHandler.js`),
+   not the baileys/QR-code channel, for anything commercial — see
+   `docs/CHANNELS.md` for why, what it actually costs (free for
+   replying to customers), and the exact free Meta setup steps. The
+   baileys files only need `.wwebjs_auth/` on persistent disk if you
+   choose to use them instead.
 5. **`ALLOW_PLATFORM_TRIAL_KEY`**: leave this `false` unless you're
    deliberately subsidizing trial usage on your own key — see
    `backend/README.md` for the full reasoning.
