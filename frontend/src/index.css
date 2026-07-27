@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: #080b13;
+    background-image: radial-gradient(circle at 15% 0%, rgba(124, 92, 255, 0.08), transparent 45%),
+      radial-gradient(circle at 85% 20%, rgba(0, 229, 255, 0.06), transparent 40%);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+  }
+
+  /* Visible keyboard focus everywhere — never remove this without replacing it. */
+  :focus-visible {
+    outline: 2px solid theme('colors.signal.DEFAULT');
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: rgba(0, 229, 255, 0.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-signal px-5 py-2.5 font-medium text-void
+           shadow-glow-signal transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-void-border bg-void-surface/60
+           px-5 py-2.5 font-medium text-ink transition-colors hover:border-signal/40 hover:text-signal;
+  }
+
+  .panel {
+    @apply rounded-2xl border border-void-border bg-void-surface shadow-card;
+  }
+
+  .field-input {
+    @apply w-full rounded-lg border border-void-border bg-void px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint
+           focus:border-signal/50 focus:outline-none;
+  }
+}
