@@ -1,0 +1,35 @@
+{
+  "name": "fanchatbot-backend",
+  "version": "0.1.0",
+  "description": "Multi-tenant BYOK AI automation gateway - secure backend foundation",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "generate:key": "node scripts/generate-encryption-key.js",
+    "test:crypto": "node scripts/test-crypto.js",
+    "test:integration": "node scripts/integration-test.js",
+    "db:init": "node scripts/init-db.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.11.3",
+    "nodemailer": "^6.9.15",
+    "telegraf": "^4.16.3",
+    "@whiskeysockets/baileys": "^6.7.9",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
