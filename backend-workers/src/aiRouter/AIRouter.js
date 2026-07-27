@@ -4,7 +4,7 @@ import { notifyTenant } from '../services/notificationService.js';
 import { query } from '../db/client.js';
 import { HttpError } from '../httpError.js';
 
-const DEFAULT_FALLBACK_ORDER = ['openai', 'groq', 'gemini', 'manus'];
+const DEFAULT_FALLBACK_ORDER = ['openai', 'groq', 'gemini', 'xai', 'manus'];
 
 function buildFallbackChain(primary) {
   return [primary, ...DEFAULT_FALLBACK_ORDER.filter((p) => p !== primary)];
@@ -35,6 +35,7 @@ async function resolveKey(env, ctx, tenantId, provider) {
       gemini: env.GEMINI_TEST_KEY,
       manus: env.MANUS_TEST_KEY,
       groq: env.GROQ_TEST_KEY,
+      xai: env.XAI_KEY,
     };
     const trialKey = trialKeyMap[provider];
     if (trialKey) return { key: trialKey, source: 'platform_trial' };
