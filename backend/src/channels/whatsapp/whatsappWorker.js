@@ -1,110 +1,107 @@
-const { fork } = require('child_process');
-const path = require('path');
-const { query } = require('../../db/pool');
-const logger = require('../../utils/logger');
-const notificationService = require('../../services/notificationService');
-const automationService = require('../../services/automationService');
-
-const WORKER_PATH = path.join(__dirname, 'whatsappWorker.js');
-
-const workers = new Map(); // tenantId -> ChildProcess
-const latestQr = new Map(); // tenantId -> latest QR payload
-
-async function updateChannelStatus(tenantId, status) {
-  await query(`UPDATE channel_configs SET status = ? WHERE tenant_id = ? AND channel = 'whatsapp'`, [status, tenantId]);
-}
-
-function startSessionForTenant(tenantId) {
-  if (workers.has(tenantId)) {
-    logger.info('whatsapp_session_already_running', { tenantId });
-    return;
-  }
-
-  const child = fork(WORKER_PATH, [], {
-    env: { ...process.env, WHATSAPP_TENANT_ID: String(tenantId) },
-    // stdio isolation: worker crashes/logs never touch the parent's
-    // stdout formatting; failures surface via the 'crash' IPC message
-    // and the 'exit' event below, not by taking down this process.
-  });
-
-  workers.set(tenantId, child);
-  logger.info('whatsapp_worker_started', { tenantId, pid: child.pid });
-
-  child.on('message', (msg) => handleWorkerMessage(tenantId, msg));
-
-  child.on('exit', (code, signal) => {
-    logger.warn('whatsapp_worker_exited', { tenantId, code, signal });
-    workers.delete(tenantId);
-    latestQr.delete(tenantId);
-    updateChannelStatus(tenantId, 'disconnected').catch(() => {});
-  });
-
-  child.on('error', (err) => {
-    logger.error('whatsapp_worker_process_error', { tenantId, error: err.message });
-  });
-}
-
-function stopSessionForTenant(tenantId) {
-  const child = workers.get(tenantId);
-  if (!child) return;
-  child.kill('SIGTERM');
-  workers.delete(tenantId);
-  latestQr.delete(tenantId);
-}
-
-function getLatestQr(tenantId) {
-  return latestQr.get(tenantId) || null;
-}
-
 /**
- * Registered with notificationService so a 401/429 from the AI Router
- * can reach the tenant's own WhatsApp number without notificationService
- * needing to know anything about child processes or baileys.
+ * This file is never `require()`d — it is `fork()`ed as its own OS
+ * process by whatsappManager.js, one process per tenant. That
+ * isolation is the whole point: if baileys throws, or the socket
+ * enters a bad state, only THIS process dies. The main Express API
+ * and every other tenant's WhatsApp session are unaffected.
+ *
+ * Talks to the parent process over Node's built-in IPC channel
+ * (process.send / process.on('message')) rather than a shared DB
+ * connection, so it stays a thin transport layer — all business logic
+ * (AI replies, order capture) lives in automationService and is
+ * invoked by the parent, not here.
  */
-async function sendSystemMessage(tenantId, to, text) {
-  const child = workers.get(tenantId);
-  if (!child) throw new Error(`No running WhatsApp session for tenant ${tenantId}`);
-  child.send({ type: 'send', to, text });
+require('dotenv').config();
+const path = require('path');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+
+const tenantId = process.env.WHATSAPP_TENANT_ID;
+if (!tenantId) {
+  console.error('whatsappWorker started without WHATSAPP_TENANT_ID');
+  process.exit(1);
 }
-notificationService.registerWhatsappSender(sendSystemMessage);
 
-async function handleWorkerMessage(tenantId, msg) {
-  if (!msg || !msg.type) return;
+// Persistent auth state per tenant — this is the `.wwebjs_auth`-style
+// directory the deployment notes call out as needing durable storage
+// across restarts (reserved/persistent hosting, not ephemeral containers).
+const authDir = path.join(__dirname, '..', '..', '..', '.wwebjs_auth', `tenant-${tenantId}`);
 
-  switch (msg.type) {
-    case 'qr':
-      latestQr.set(tenantId, msg.qr);
-      await updateChannelStatus(tenantId, 'pending_qr');
-      break;
+let sock;
 
-    case 'status':
-      await updateChannelStatus(tenantId, msg.status);
-      if (msg.status === 'connected') latestQr.delete(tenantId);
-      break;
+async function start() {
+  const { state, saveCreds } = await useMultiFileAuthState(authDir);
 
-    case 'crash':
-      logger.error('whatsapp_worker_reported_crash', { tenantId, error: msg.error });
-      await updateChannelStatus(tenantId, 'error');
-      break;
+  sock = makeWASocket({
+    auth: state,
+    printQRInTerminal: false, // we forward the QR to the parent/dashboard instead
+  });
 
-    case 'inbound_message':
-      try {
-        const { reply } = await automationService.handleIncomingMessage({
-          tenantId,
-          channel: 'whatsapp',
-          externalUserId: msg.from,
-          displayName: msg.displayName,
-          text: msg.text,
-        });
-        await sendSystemMessage(tenantId, msg.from, reply);
-      } catch (err) {
-        logger.error('whatsapp_inbound_handling_failed', { tenantId, error: err.message });
+  sock.ev.on('creds.update', saveCreds);
+
+  sock.ev.on('connection.update', (update) => {
+    const { connection, lastDisconnect, qr } = update;
+
+    if (qr) {
+      process.send({ type: 'qr', tenantId, qr });
+    }
+
+    if (connection === 'open') {
+      process.send({ type: 'status', tenantId, status: 'connected' });
+    }
+
+    if (connection === 'close') {
+      const statusCode = lastDisconnect?.error?.output?.statusCode;
+      const loggedOut = statusCode === DisconnectReason.loggedOut;
+      process.send({ type: 'status', tenantId, status: loggedOut ? 'disconnected' : 'reconnecting' });
+      if (!loggedOut) {
+        // Transient disconnect (network blip, restart) — reconnect
+        // within this same worker process rather than exiting.
+        start().catch(reportCrash);
       }
-      break;
+    }
+  });
 
-    default:
-      break;
-  }
+  sock.ev.on('messages.upsert', ({ messages, type }) => {
+    if (type !== 'notify') return;
+    for (const msg of messages) {
+      if (!msg.message || msg.key.fromMe) continue;
+      const from = msg.key.remoteJid;
+      const text =
+        msg.message.conversation ||
+        msg.message.extendedTextMessage?.text ||
+        msg.message.imageMessage?.caption ||
+        '';
+      if (!text) continue; // skip non-text messages for now (stickers, media without caption, etc.)
+      process.send({
+        type: 'inbound_message',
+        tenantId,
+        from,
+        displayName: msg.pushName || null,
+        text,
+      });
+    }
+  });
 }
 
-module.exports = { startSessionForTenant, stopSessionForTenant, getLatestQr, sendSystemMessage };
+// Parent asks us to send a message — either an AI-generated reply or a
+// system notification (e.g. "your OpenAI key was rejected").
+process.on('message', async (parentMsg) => {
+  if (parentMsg?.type === 'send' && sock) {
+    try {
+      await sock.sendMessage(parentMsg.to, { text: parentMsg.text });
+      process.send({ type: 'send_ack', to: parentMsg.to, ok: true });
+    } catch (err) {
+      process.send({ type: 'send_ack', to: parentMsg.to, ok: false, error: err.message });
+    }
+  }
+});
+
+function reportCrash(err) {
+  process.send({ type: 'crash', tenantId, error: err?.message || String(err) });
+  process.exit(1);
+}
+
+process.on('uncaughtException', reportCrash);
+process.on('unhandledRejection', reportCrash);
+
+start().catch(reportCrash);
