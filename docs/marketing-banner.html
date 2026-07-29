@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 1200px; height: 630px;
+    background: #080b13;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(124,92,255,0.16), transparent 42%),
+      radial-gradient(circle at 88% 15%, rgba(0,229,255,0.14), transparent 40%),
+      linear-gradient(rgba(35,43,74,0.35) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(35,43,74,0.35) 1px, transparent 1px);
+    background-size: auto, auto, 48px 48px, 48px 48px;
+    font-family: "Space Grotesk", "Arial Black", Arial, sans-serif;
+    color: #E9ECF8;
+    position: relative;
+    overflow: hidden;
+  }
+  .brand { position: absolute; top: 56px; left: 64px; display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    width: 40px; height: 40px; border-radius: 12px; background: #171E38;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.35), 0 0 24px rgba(0,229,255,0.25);
+  }
+  .brand-mark svg { width: 20px; height: 20px; }
+  .brand-name { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+
+  .eyebrow {
+    position: absolute; top: 150px; left: 64px;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #11172A; border: 1px solid #232B4A; border-radius: 999px;
+    padding: 8px 16px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em;
+    color: #7C5CFF; font-family: "Inter", Arial, sans-serif; text-transform: uppercase;
+  }
+
+  h1 {
+    position: absolute; top: 205px; left: 64px; width: 620px;
+    font-size: 54px; line-height: 1.08; font-weight: 700; letter-spacing: -0.02em;
+  }
+  h1 .accent { color: #00E5FF; }
+
+  .sub {
+    position: absolute; top: 420px; left: 64px; width: 560px;
+    font-family: "Inter", Arial, sans-serif; font-size: 18px; line-height: 1.5;
+    color: #8B93B2;
+  }
+
+  .providers {
+    position: absolute; top: 500px; left: 64px; display: flex; gap: 10px;
+  }
+  .chip {
+    font-family: "JetBrains Mono", monospace; font-size: 13px;
+    background: #11172A; border: 1px solid #232B4A; border-radius: 8px;
+    padding: 7px 12px; color: #8B93B2;
+  }
+
+  /* right-side routing glyph */
+  .hub {
+    position: absolute; top: 235px; left: 830px;
+    width: 130px; height: 130px; border-radius: 24px;
+    background: #11172A; border: 1px solid rgba(0,229,255,0.4);
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.35), 0 0 50px rgba(0,229,255,0.28);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .hub-dot { width: 10px; height: 10px; border-radius: 50%; background: #39FF88; margin-bottom: 10px; }
+  .hub-label { font-size: 13px; font-weight: 700; text-align: center; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .node { position: absolute; width: 150px; padding: 10px 14px; border-radius: 999px;
+    background: rgba(17,23,42,0.85); border: 1px solid #232B4A; font-family:"Inter",Arial,sans-serif; font-size: 13px; color:#8B93B2; }
+  .n1 { top: 130px; left: 700px; }
+  .n2 { top: 190px; left: 660px; }
+  .n3 { top: 340px; left: 660px; }
+  .n4 { top: 400px; left: 700px; }
+  .n5 { top: 130px; left: 1010px; }
+  .n6 { top: 190px; left: 1030px; }
+  .n7 { top: 340px; left: 1030px; }
+  .n8 { top: 400px; left: 1010px; }
+
+  svg.wires { position: absolute; top: 0; left: 0; width: 1200px; height: 630px; }
+</style>
+</head>
+<body>
+  <svg class="wires">
+    <path d="M 795 150 C 850 150, 850 260, 895 300" stroke="#00E5FF" stroke-opacity="0.35" stroke-width="1.5" fill="none" stroke-dasharray="5 5"/>
+    <path d="M 790 210 C 850 210, 850 280, 895 300" stroke="#00E5FF" stroke-opacity="0.35" stroke-width="1.5" fill="none" stroke-dasharray="5 5"/>
+    <path d="M 790 360 C 850 360, 850 320, 895 320" stroke="#00E5FF" stroke-opacity="0.35" stroke-width="1.5" fill="none" stroke-dasharray="5 5"/>
+    <path d="M 795 420 C 850 420, 850 340, 895 320" stroke="#00E5FF" stroke-opacity="0.35" stroke-width="1.5" fill="none" stroke-dasharray="5 5"/>
+
+    <path d="M 965 300 C 990 300, 990 150, 1010 150" stroke="#7C5CFF" stroke-opacity="0.4" stroke-width="1.5" fill="none" stroke-dasharray="5 5"/>
+    <path d="M 965 305 C 990 305, 990 210, 1030 210" stroke="#7C5CFF" stroke-opacity="0.4" stroke-width="1.5" fill="none" stroke-dasharray="5 5"/>
+    <path d="M 965 335 C 990 335, 990 360, 1030 360" stroke="#7C5CFF" stroke-opacity="0.4" stroke-width="1.5" fill="none" stroke-dasharray="5 5"/>
+    <path d="M 965 340 C 990 340, 990 420, 1010 420" stroke="#7C5CFF" stroke-opacity="0.4" stroke-width="1.5" fill="none" stroke-dasharray="5 5"/>
+  </svg>
+
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#00E5FF" stroke-width="2"><path d="M4 11a9 9 0 0 1 9-9M4 15a13 13 0 0 1 13-13M4 19h.01M8 19a4 4 0 0 1 4-4"/></svg>
+    </div>
+    <div class="brand-name">Fanchatbot</div>
+  </div>
+
+  <div class="eyebrow">🔑 Bring your own AI key</div>
+
+  <h1>Plug in your own AI.<br/><span class="accent">We wire it everywhere</span><br/>your customers are.</h1>
+
+  <div class="sub">WhatsApp, Telegram, Messenger &amp; Email — routed through your own OpenAI, Gemini, Groq or Manus key.</div>
+
+  <div class="providers">
+    <div class="chip">OpenAI</div><div class="chip">Gemini</div><div class="chip">Groq · LLaMA 3.1</div><div class="chip">Manus</div>
+  </div>
+
+  <div class="node n1">WhatsApp</div>
+  <div class="node n2">Telegram</div>
+  <div class="node n3">Messenger</div>
+  <div class="node n4">Email</div>
+  <div class="node n5">OpenAI</div>
+  <div class="node n6">Gemini</div>
+  <div class="node n7">Groq</div>
+  <div class="node n8">Manus</div>
+
+  <div class="hub"><div class="hub-dot"></div><div class="hub-label">Your<br/>Router</div></div>
+</body>
+</html>
