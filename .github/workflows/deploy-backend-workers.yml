@@ -1,15 +1,11 @@
 name: Deploy Backend (Cloudflare Workers)
 
-# This is the file that means "push to GitHub" is the only step you
-# need — no manual wrangler deploy, no dashboard clicking. Only runs
-# when something under backend-workers/ actually changed, so editing
-# the frontend or marketing site won't trigger a pointless redeploy.
 "on":
   push:
     branches: [main]
     paths:
       - "backend-workers/**"
-  workflow_dispatch: # Allows you to manually trigger this from the GitHub Actions tab
+  workflow_dispatch: 
 
 jobs:
   deploy:
@@ -31,11 +27,8 @@ jobs:
 
       - name: Setup Database, Secrets and Deploy
         env:
-          # Preserving your old secrets in the environment (Wrangler ignores these names)
           OLD_CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           OLD_CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          
-          # Wrangler strictly requires these exact variable names to deploy
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_WORKERS_DEPLOY_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
@@ -44,7 +37,8 @@ jobs:
           node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" | npx wrangler secret put ENCRYPTION_MASTER_KEY
 
           echo "=== 2. Creating Cloudflare Hyperdrive ==="
-          OUTPUT=$(npx wrangler hyperdrive create smartgen-db --connection-string="mysql://2JngFiPXLuM2pkK.root:isV7NPF710XPESwD@gateway01.ap-northeast-1.prod.aws.tidbcloud.com:4000/fanchatbot")
+          # Added the URL-encoded SSL requirement to the end of the connection string to prevent the AuthSwitchRequest error
+          OUTPUT=$(npx wrangler hyperdrive create smartgen-db --connection-string="mysql://2JngFiPXLuM2pkK.root:isV7NPF710XPESwD@gateway01.ap-northeast-1.prod.aws.tidbcloud.com:4000/fanchatbot?ssl=%7B%22rejectUnauthorized%22%3Atrue%7D")
           
           echo "=== 3. Extracting Hyperdrive ID ==="
           HYPERDRIVE_ID=$(echo "$OUTPUT" | grep -o 'id: "[^"]*"' | cut -d'"' -f2)
