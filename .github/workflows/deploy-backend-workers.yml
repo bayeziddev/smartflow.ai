@@ -1,4 +1,4 @@
-name: Deploy Backend (Cloudflare Workers)
+ name: Deploy Backend (Cloudflare Workers)
 
 # This is the file that means "push to GitHub" is the only step you
 # need — no manual wrangler deploy, no dashboard clicking. Only runs
