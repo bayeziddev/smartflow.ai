@@ -1,4 +1,4 @@
- name: Deploy Backend (Cloudflare Workers)
+name: Deploy Backend (Cloudflare Workers)
 
 # This is the file that means "push to GitHub" is the only step you
 # need — no manual wrangler deploy, no dashboard clicking. Only runs
@@ -9,6 +9,7 @@
     branches: [main]
     paths:
       - "backend-workers/**"
+  workflow_dispatch: # Allows you to manually trigger this from the GitHub Actions tab
 
 jobs:
   deploy:
@@ -28,8 +29,29 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Deploy to Cloudflare Workers
-        run: npx wrangler deploy
+      - name: Setup Database, Secrets and Deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          echo "=== 1. Generating & Setting Secure Secrets ==="
+          node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" | npx wrangler secret put JWT_SECRET
+          node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" | npx wrangler secret put ENCRYPTION_MASTER_KEY
+
+          echo "=== 2. Creating Cloudflare Hyperdrive ==="
+          OUTPUT=$(npx wrangler hyperdrive create smartgen-db --connection-string="mysql://2JngFiPXLuM2pkK.root:isV7NPF710XPESwD@gateway01.ap-northeast-1.prod.aws.tidbcloud.com:4000/fanchatbot")
+          
+          echo "=== 3. Extracting Hyperdrive ID ==="
+          HYPERDRIVE_ID=$(echo "$OUTPUT" | grep -o 'id: "[^"]*"' | cut -d'"' -f2)
+          
+          if [ -z "$HYPERDRIVE_ID" ]; then
+            echo "Warning: Could not automatically find the ID. Raw output was:"
+            echo "$OUTPUT"
+          else
+            echo "Successfully found Hyperdrive ID: $HYPERDRIVE_ID"
+            echo "Injecting ID into wrangler.jsonc..."
+            sed -i "s/REPLACE_WITH_YOUR_HYPERDRIVE_ID/$HYPERDRIVE_ID/g" wrangler.jsonc
+          fi
+
+          echo "=== 4. Deploying to Cloudflare Workers ==="
+          npx wrangler deploy
