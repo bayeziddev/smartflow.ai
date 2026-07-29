@@ -1,11 +1,14 @@
 name: Deploy Backend (Cloudflare Workers)
 
+# This is the file that means "push to GitHub" is the only step you
+# need — no manual wrangler deploy, no dashboard clicking. Only runs
+# when something under backend-workers/ actually changed, so editing
+# the frontend or marketing site won't trigger a pointless redeploy.
 "on":
   push:
     branches: [main]
     paths:
       - "backend-workers/**"
-  workflow_dispatch: 
 
 jobs:
   deploy:
@@ -20,34 +23,13 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "20"
 
       - name: Install dependencies
         run: npm install
 
-      - name: Setup Database, Secrets and Deploy
+      - name: Deploy to Cloudflare Workers
+        run: npx wrangler deploy
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_WORKERS_DEPLOY_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: |
-          echo "=== 1. Generating & Setting Secure Secrets ==="
-          node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" | npx wrangler secret put JWT_SECRET
-          node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" | npx wrangler secret put ENCRYPTION_MASTER_KEY
-
-          echo "=== 2. Creating Cloudflare Hyperdrive ==="
-          OUTPUT=$(npx wrangler hyperdrive create fanchatbot-new --connection-string="${{ secrets.DB_CONNECTION_STRING }}")
-          
-          echo "=== 3. Extracting Hyperdrive ID ==="
-          HYPERDRIVE_ID=$(echo "$OUTPUT" | grep -o 'id: "[^"]*"' | cut -d'"' -f2)
-          
-          if [ -z "$HYPERDRIVE_ID" ]; then
-            echo "Warning: Could not automatically find the ID. Raw output was:"
-            echo "$OUTPUT"
-          else
-            echo "Successfully found Hyperdrive ID: $HYPERDRIVE_ID"
-            echo "Injecting ID into wrangler.jsonc..."
-            sed -i "s/REPLACE_WITH_YOUR_HYPERDRIVE_ID/$HYPERDRIVE_ID/g" wrangler.jsonc
-          fi
-
-          echo "=== 4. Deploying to Cloudflare Workers ==="
-          npx wrangler deploy
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
