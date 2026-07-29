@@ -1,4 +1,4 @@
-# smargenchatbot — BYOK Multi-Channel AI Automation Platform
+# Fanchatbot — BYOK Multi-Channel AI Automation Platform
 
 **Lost track of where things stand? Read `docs/CASE-STUDY.md` first** —
 it's the full project journal: what's built, what's broken, every
@@ -13,6 +13,9 @@ tenants' AI bill for them.
 
 ```
 fanchatbot-system/
+├── .github/workflows/  Auto-deploy for backend-workers — push to main, it deploys itself.
+│                        (Must stay at this exact path — GitHub only reads workflows from
+│                        the repo root, not from inside a subfolder.)
 ├── backend/           Node.js + Express version — needs a VPS (see backend/README.md)
 ├── backend-workers/   Cloudflare Workers version — no VPS needed, uses Hyperdrive
 │                      (see backend-workers/README.md — this is the one to use if

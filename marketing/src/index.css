@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { color-scheme: dark; }
+  body {
+    background-color: #080b13;
+    background-image: radial-gradient(circle at 15% 0%, rgba(124, 92, 255, 0.1), transparent 45%),
+      radial-gradient(circle at 85% 15%, rgba(0, 229, 255, 0.08), transparent 40%),
+      radial-gradient(circle at 50% 100%, rgba(255, 200, 87, 0.05), transparent 50%);
+  }
+  h1, h2, h3, h4 { @apply font-display tracking-tight; }
+  :focus-visible { outline: 2px solid theme('colors.signal.DEFAULT'); outline-offset: 2px; border-radius: 4px; }
+  ::selection { background: rgba(0, 229, 255, 0.25); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-signal px-6 py-3 font-semibold text-void
+           shadow-glow-signal transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98];
+  }
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gold px-6 py-3 font-semibold text-void
+           shadow-glow-gold transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-void-border bg-void-surface/60
+           px-6 py-3 font-medium text-ink transition-colors hover:border-signal/40 hover:text-signal;
+  }
+  .panel { @apply rounded-2xl border border-void-border bg-void-surface shadow-card; }
+  .eyebrow { @apply text-xs font-semibold uppercase tracking-wider; }
+}
