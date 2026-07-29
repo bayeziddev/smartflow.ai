@@ -1,9 +1,35 @@
 name: Setup Database & Secrets (Cloudflare Workers)
 
 # This runs only when you manually click "Run workflow" in GitHub Actions.
-# It prevents conflict with your main deployment yml file.
+# It provides an interactive UI form in GitHub to pass your database details safely.
 "on":
-  workflow_dispatch: 
+  workflow_dispatch:
+    inputs:
+      db_user:
+        description: 'Database Username'
+        required: true
+        default: '2JngFiPXLuM2pkK.root'
+        type: string
+      db_password:
+        description: 'Database Password'
+        required: true
+        default: 'isV7NPF710XPESwD'
+        type: string
+      db_host:
+        description: 'Database Host'
+        required: true
+        default: 'gateway01.ap-northeast-1.prod.aws.tidbcloud.com'
+        type: string
+      db_port:
+        description: 'Database Port'
+        required: true
+        default: '4000'
+        type: string
+      db_name:
+        description: 'Database Name'
+        required: true
+        default: 'fanchatbot'
+        type: string
 
 jobs:
   setup:
@@ -32,10 +58,14 @@ jobs:
           node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" | npx wrangler secret put JWT_SECRET
           node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" | npx wrangler secret put ENCRYPTION_MASTER_KEY
 
-          echo "=== 2. Creating Cloudflare Hyperdrive ==="
-          OUTPUT=$(npx wrangler hyperdrive create fanchatbot-new --connection-string="${{ secrets.DB_CONNECTION_STRING }}")
+          echo "=== 2. Constructing Secure Connection String ==="
+          # Constructing the connection string dynamically to prevent URL invalid errors
+          CONN_STR="mysql://${{ inputs.db_user }}:${{ inputs.db_password }}@${{ inputs.db_host }}:${{ inputs.db_port }}/${{ inputs.db_name }}?ssl=%7B%22rejectUnauthorized%22%3Atrue%7D"
+
+          echo "=== 3. Creating Cloudflare Hyperdrive ==="
+          OUTPUT=$(npx wrangler hyperdrive create fanchatbot-new --connection-string="$CONN_STR")
           
-          echo "=== 3. Extracting Hyperdrive ID ==="
+          echo "=== 4. Extracting Hyperdrive ID ==="
           HYPERDRIVE_ID=$(echo "$OUTPUT" | grep -o 'id: "[^"]*"' | cut -d'"' -f2)
           
           if [ -z "$HYPERDRIVE_ID" ]; then
@@ -47,5 +77,5 @@ jobs:
             sed -i "s/REPLACE_WITH_YOUR_HYPERDRIVE_ID/$HYPERDRIVE_ID/g" wrangler.jsonc
           fi
 
-          echo "=== 4. Deploying to Cloudflare Workers ==="
+          echo "=== 5. Deploying to Cloudflare Workers ==="
           npx wrangler deploy
