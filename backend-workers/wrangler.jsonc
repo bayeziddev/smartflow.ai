@@ -1,0 +1,34 @@
+{
+  "name": "fanchatbot-backend",
+  "main": "src/index.js",
+  "compatibility_date": "2025-06-05",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // ------------------------------------------------------------------
+  // Hyperdrive lets this Worker connect to your MySQL-compatible
+  // database (TiDB Cloud Serverless, PlanetScale, etc.) with pooled,
+  // low-latency connections — no VPS needed for the database layer.
+  //
+  // Create it with:
+  //   npx wrangler hyperdrive create fanchatbot-db \
+  //     --connection-string="mysql://USER:PASSWORD@HOST:PORT/DBNAME"
+  // Then paste the id it prints below.
+  // ------------------------------------------------------------------
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "REPLACE_WITH_YOUR_HYPERDRIVE_ID"
+    }
+  ],
+
+  "vars": {
+    "FRONTEND_URL": "http://localhost:5173"
+  }
+
+  // Secrets (never put these here — set via `wrangler secret put NAME`):
+  //   JWT_SECRET
+  //   ENCRYPTION_MASTER_KEY   (64 hex chars — see scripts/generate-key.js)
+  //   ALLOW_PLATFORM_TRIAL_KEY
+  //   OPENAI_TEST_KEY / GEMINI_TEST_KEY / MANUS_TEST_KEY / GROQ_TEST_KEY
+  //   MANUS_OAUTH_CLIENT_ID / MANUS_OAUTH_CLIENT_SECRET / MANUS_OAUTH_REDIRECT_URI
+}
