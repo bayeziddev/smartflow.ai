@@ -1,4 +1,4 @@
-# Fanchatbot — BYOK Multi-Channel AI Automation Platform
+# Smartgenchatbot — BYOK Multi-Channel AI Automation Platform
 
 **Lost track of where things stand? Read `docs/CASE-STUDY.md` first** —
 it's the full project journal: what's built, what's broken, every
