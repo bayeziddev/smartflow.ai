@@ -13,13 +13,28 @@ import { createConnection } from 'mysql2/promise';
  * fast-path Node uses) — see Cloudflare's Hyperdrive + MySQL docs.
  */
 async function openConnection(env) {
-  return createConnection({
+  // Use Hyperdrive if available, otherwise fall back to direct connection variables
+  const config = env.HYPERDRIVE ? {
     host: env.HYPERDRIVE.host,
     user: env.HYPERDRIVE.user,
     password: env.HYPERDRIVE.password,
     database: env.HYPERDRIVE.database,
     port: env.HYPERDRIVE.port,
+  } : {
+    host: env.DB_HOST,
+    user: env.DB_USER,
+    password: env.DB_PASSWORD,
+    database: env.DB_DATABASE,
+    port: parseInt(env.DB_PORT || '4000'),
+  };
+
+  return createConnection({
+    ...config,
     disableEval: true,
+    ssl: {
+      minVersion: 'TLSv1.2',
+      rejectUnauthorized: true
+    }
   });
 }
 
