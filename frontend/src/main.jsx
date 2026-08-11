@@ -7,7 +7,9 @@ import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
+    {/* BASE_URL tracks vite.config.js's `base` — "/" locally, "/smartflow.ai/"
+        on GitHub Pages — so routes resolve correctly under either. */}
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AuthProvider>
         <App />
       </AuthProvider>
