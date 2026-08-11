@@ -13,14 +13,16 @@ tenants' AI bill for them.
 
 ```
 fanchatbot-system/
-├── .github/workflows/  Auto-deploy for backend-workers — push to main, it deploys itself.
-│                        (Must stay at this exact path — GitHub only reads workflows from
-│                        the repo root, not from inside a subfolder.)
+├── .github/workflows/  Auto-deploy for backend-workers (Cloudflare) and frontend (GitHub
+│                        Pages) — push to main, they deploy themselves. (Must stay at this
+│                        exact path — GitHub only reads workflows from the repo root, not
+│                        from inside a subfolder.)
 ├── backend/           Node.js + Express version — needs a VPS (see backend/README.md)
 ├── backend-workers/   Cloudflare Workers version — no VPS needed, connects to the DB directly
 │                      (see backend-workers/README.md — this is the one to use if
 │                      you don't have/want a VPS)
 ├── frontend/    React + Vite + Tailwind dashboard and landing page (logged-in app)
+│                Deployed automatically to GitHub Pages — see deploy-frontend-pages.yml
 ├── marketing/   Public sales page — lifetime deal + Facebook Pixel (see marketing/README.md)
 └── docs/
     ├── DEPLOYMENT.md          Cloudflare setup + ongoing operations guide
