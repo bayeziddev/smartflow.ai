@@ -17,7 +17,7 @@ fanchatbot-system/
 │                        (Must stay at this exact path — GitHub only reads workflows from
 │                        the repo root, not from inside a subfolder.)
 ├── backend/           Node.js + Express version — needs a VPS (see backend/README.md)
-├── backend-workers/   Cloudflare Workers version — no VPS needed, uses Hyperdrive
+├── backend-workers/   Cloudflare Workers version — no VPS needed, connects to the DB directly
 │                      (see backend-workers/README.md — this is the one to use if
 │                      you don't have/want a VPS)
 ├── frontend/    React + Vite + Tailwind dashboard and landing page (logged-in app)
