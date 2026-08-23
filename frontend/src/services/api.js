@@ -58,4 +58,7 @@ export const exportClientsUrl = () => '/api/admin/clients/export.csv';
 // ---- Chat (test-a-key / widget) ----
 export const sendChat = (payload) => api.post('/chat', payload).then((r) => r.data);
 
+// ---- Leads (visitors who haven't registered yet — no auth) ----
+export const submitLead = (email, source) => api.post('/leads', { email, source }).then((r) => r.data);
+
 export default api;
