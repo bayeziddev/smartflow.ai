@@ -8,16 +8,11 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ fullName: '', companyName: '', email: '', password: '' });
-  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!agreed) {
-      setError('Please agree to the policies below to create an account.');
-      return;
-    }
     setError('');
     setLoading(true);
     try {
@@ -31,10 +26,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <AuthLayout
-      title="Create your account"
-      subtitle="3-day free trial, no card required — add your own AI key when you're ready."
-    >
+    <AuthLayout title="Create your account" subtitle="Free to start — add your own AI key when you're ready.">
       <form onSubmit={handleSubmit} className="space-y-3.5">
         <div>
           <label className="mb-1.5 block text-xs font-medium text-ink-muted">Full name</label>
@@ -79,38 +71,9 @@ export default function RegisterPage() {
           />
         </div>
 
-        <label className="flex items-start gap-2.5 text-xs text-ink-muted">
-          <input
-            type="checkbox"
-            required
-            checked={agreed}
-            onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-void-border bg-void text-signal focus:ring-signal/50"
-          />
-          <span>
-            I agree to the{' '}
-            <Link to="/terms" target="_blank" className="text-signal hover:underline">
-              Terms
-            </Link>
-            ,{' '}
-            <Link to="/privacy" target="_blank" className="text-signal hover:underline">
-              Privacy Policy
-            </Link>
-            ,{' '}
-            <Link to="/refund-policy" target="_blank" className="text-signal hover:underline">
-              Refund Policy
-            </Link>{' '}
-            and{' '}
-            <Link to="/payment-terms" target="_blank" className="text-signal hover:underline">
-              Payment Terms
-            </Link>
-            .
-          </span>
-        </label>
-
         {error && <p className="text-sm text-rose">{error}</p>}
 
-        <button type="submit" disabled={loading || !agreed} className="btn-primary w-full disabled:opacity-60">
+        <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-60">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
           Create account
         </button>
