@@ -1,6 +1,12 @@
 # Smartgenchatbot — BYOK Multi-Channel AI Automation Platform
-Live Automation [Live SmartgenFlwo.Ai](httsp://chatbot.sayadbayezid.com)
+---
 
+
+
+Live Automation 
+[Live SmartgenFlwo.Ai](httsp://chatbot.sayadbayezid.com)
+
+---
 **Lost track of where things stand? Read `docs/CASE-STUDY.md` first** —
 it's the full project journal: what's built, what's broken, every
 Meta/Cloudflare account involved and why, and the prioritized list of
