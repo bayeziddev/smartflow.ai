@@ -16,9 +16,6 @@ export default function LandingNav() {
           <a href="#features" className="transition-colors hover:text-ink">
             Features
           </a>
-          <Link to="/guide" className="transition-colors hover:text-ink">
-            Guide
-          </Link>
         </nav>
         <div className="flex items-center gap-3">
           <Link to="/login" className="text-sm text-ink-muted transition-colors hover:text-ink">
