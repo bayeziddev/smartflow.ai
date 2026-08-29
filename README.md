@@ -4,7 +4,7 @@
 
 
 Live Automation 
-[Live SmartgenFlwo.Ai](httsp://chatbot.sayadbayezid.com)
+![Live SmartgenFlwo.Ai](https://chatbot.sayadbayezid.com)
 
 ---
 **Lost track of where things stand? Read `docs/CASE-STUDY.md` first** —
