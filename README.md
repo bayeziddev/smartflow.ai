@@ -4,9 +4,10 @@
 
 
 Live Automation 
-![Live SmartgenFlwo.Ai](https://chatbot.sayadbayezid.com)
+
 
 ---
+![Live SmartgenFlwo.Ai](https://chatbot.sayadbayezid.com)
 **Lost track of where things stand? Read `docs/CASE-STUDY.md` first** —
 it's the full project journal: what's built, what's broken, every
 Meta/Cloudflare account involved and why, and the prioritized list of
