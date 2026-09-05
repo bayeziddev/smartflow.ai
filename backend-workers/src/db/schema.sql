@@ -176,20 +176,3 @@ CREATE TABLE IF NOT EXISTS messages (
   CONSTRAINT fk_messages_session FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE,
   INDEX idx_messages_session (session_id, created_at)
 ) ENGINE=InnoDB;
-
--- ----------------------------------------------------------------------
--- leads: people who gave an email without (yet) completing registration
--- — e.g. a "get updates" form on the marketing site. Deliberately not
--- linked to `users`; a lead may never sign up at all. `converted_user_id`
--- is set later if the same email does register, so leads and real
--- accounts can be reconciled without treating every visitor as a tenant.
--- ----------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS leads (
-  id                 BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  email              VARCHAR(255) NOT NULL,
-  source             VARCHAR(100) NULL,                 -- e.g. "footer", "guide-cta"
-  converted_user_id  BIGINT UNSIGNED NULL,
-  created_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_leads_converted_user FOREIGN KEY (converted_user_id) REFERENCES users(id) ON DELETE SET NULL,
-  INDEX idx_leads_email (email)
-) ENGINE=InnoDB;

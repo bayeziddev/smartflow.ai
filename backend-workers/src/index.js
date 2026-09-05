@@ -10,7 +10,6 @@ import channelRoutes from './routes/channels.js';
 import webhookRoutes from './routes/webhooks.js';
 import conversationRoutes from './routes/conversations.js';
 import adminRoutes from './routes/admin.js';
-import leadRoutes from './routes/leads.js';
 
 const app = new Hono();
 
@@ -29,7 +28,6 @@ app.route('/api/channels', channelRoutes);
 app.route('/api/conversations', conversationRoutes);
 app.route('/api/admin', adminRoutes);
 app.route('/api/webhooks', webhookRoutes); // no requireAuth — external callers (Meta)
-app.route('/api/leads', leadRoutes); // no requireAuth — captures visitors who haven't registered yet
 
 app.notFound((c) => c.json({ error: { code: 'NOT_FOUND', message: `No route for ${c.req.method} ${c.req.path}` } }, 404));
 

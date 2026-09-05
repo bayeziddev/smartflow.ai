@@ -25,18 +25,6 @@ auth.post('/register', async (c) => {
     [tenantUuid, email, passwordHash, fullName || null, companyName || null]
   );
 
-  // Best-effort: if this email previously left a lead (e.g. the footer
-  // "get updates" form) before registering, link it. Runs via
-  // waitUntil so it isn't cut off when the response returns, and never
-  // blocks or fails registration itself.
-  const reconcileLead = query(
-    c.env,
-    c.executionCtx,
-    'UPDATE leads SET converted_user_id = ? WHERE email = ? AND converted_user_id IS NULL',
-    [result.insertId, email.trim().toLowerCase()]
-  ).catch((err) => console.error('lead_reconcile_failed', err.message));
-  if (c.executionCtx?.waitUntil) c.executionCtx.waitUntil(reconcileLead);
-
   const token = await sign(
     { tenantId: result.insertId, role: 'owner', isPlatformAdmin: false, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 },
     c.env.JWT_SECRET,

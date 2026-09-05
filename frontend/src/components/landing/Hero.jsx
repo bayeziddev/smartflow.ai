@@ -1,38 +1,21 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, KeyRound, Sparkles } from 'lucide-react';
+import { ArrowRight, KeyRound } from 'lucide-react';
 import RoutingDiagram from './RoutingDiagram.jsx';
-
-const LOGO_SRC = `${import.meta.env.BASE_URL}smartgen-logo-full.png`;
 
 export default function Hero() {
   return (
     <section className="relative overflow-hidden bg-grid-fade bg-grid px-6 pb-8 pt-20 sm:pt-28">
       <div className="mx-auto max-w-3xl text-center">
-        <motion.img
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          src={LOGO_SRC}
-          alt="SmartGen"
-          className="mx-auto mb-6 h-14 w-auto sm:h-16"
-        />
-
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.03 }}
-          className="mx-auto mb-3 flex flex-wrap items-center justify-center gap-2"
+          transition={{ duration: 0.5 }}
+          className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-void-border bg-void-surface px-3.5 py-1.5 text-xs font-medium uppercase tracking-wider text-intel"
         >
-          <span className="inline-flex items-center gap-2 rounded-full border border-void-border bg-void-surface px-3.5 py-1.5 text-xs font-medium uppercase tracking-wider text-intel">
-            <KeyRound className="h-3.5 w-3.5" />
-            Bring your own AI key
-          </span>
-          <span className="inline-flex items-center gap-2 rounded-full border border-signal/30 bg-signal/10 px-3.5 py-1.5 text-xs font-medium uppercase tracking-wider text-signal">
-            <Sparkles className="h-3.5 w-3.5" />
-            3-day free trial · no card required
-          </span>
+          <KeyRound className="h-3.5 w-3.5" />
+          Bring your own AI key
         </motion.div>
 
         <motion.h1
