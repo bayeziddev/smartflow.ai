@@ -8,7 +8,7 @@ import react from '@vitejs/plugin-react';
 const isGithubPagesBuild = process.env.GITHUB_PAGES === 'true';
 
 export default defineConfig({
-  base: isGithubPagesBuild ? '/smartflow.ai/' : '/',
+  base: isGithubPagesBuild ? '/https://chatbot.sayadbayezid.com/' : '/',
   plugins: [react()],
   server: {
     port: 5173,
