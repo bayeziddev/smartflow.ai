@@ -40,12 +40,16 @@ jobs:
 
       - name: Build
         env:
-          GITHUB_PAGES: "true"
+          # Served at the root of chatbot.sayadbayezid.com (CNAME is in
+          # frontend/public), so the default VITE_BASE of "/" is right.
           # Frontend and backend live on different origins (GitHub
           # Pages vs Workers), so this must be an absolute URL, not
           # the "/api" same-origin default used in local dev.
           VITE_API_BASE_URL: https://fanchatbot-backend.sayadmdbayezidhosan.workers.dev/api
         run: npm run build
+
+      - name: Check the custom domain file is in the build
+        run: grep -qx 'chatbot.sayadbayezid.com' dist/CNAME
 
       # GitHub Pages has no server-side rewrites, so a hard refresh (or
       # a shared link) on any client-side route like /login would 404

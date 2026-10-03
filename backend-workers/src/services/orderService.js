@@ -1,4 +1,4 @@
-import { query } from '../db/client.js';
+import { query, clampInt } from '../db/client.js';
 
 async function sha256Hex(text) {
   const data = new TextEncoder().encode(text);
@@ -34,13 +34,12 @@ export async function listOrders(env, ctx, tenantId, { status, limit = 200, offs
     clauses.push('status = ?');
     params.push(status);
   }
-  params.push(Number(limit), Number(offset));
 
   const rows = await query(
     env,
     ctx,
     `SELECT id, channel, customer_identifier, customer_name, items_json, total_amount, currency, status, created_at
-     FROM orders WHERE ${clauses.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+     FROM orders WHERE ${clauses.join(' AND ')} ORDER BY created_at DESC LIMIT ${clampInt(limit, 200, 1, 5000)} OFFSET ${clampInt(offset, 0, 0, 1_000_000)}`,
     params
   );
 

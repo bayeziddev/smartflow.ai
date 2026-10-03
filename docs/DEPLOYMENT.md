@@ -4,7 +4,44 @@ How to run Fanchatbot in production, put it behind Cloudflare, and keep
 it healthy afterward. Read `backend/README.md` first if you haven't —
 this guide assumes you already have it running locally.
 
-## 1. Architecture in production
+## 0. What is actually live today (start here)
+
+```
+Browser ─▶ chatbot.sayadbayezid.com  (GitHub Pages, frontend/ — .github/workflows/deploy-frontend-pages.yml)
+             │ HTTPS + JWT
+             ▼
+           fanchatbot-backend.<you>.workers.dev  (Cloudflare Worker, backend-workers/ — deploy-backend-workers.yml)
+             │                ▲  signed (HMAC) both ways
+             ▼                │
+           TiDB Cloud        whatsapp-gateway/  (Docker, always-on host + /data volume)  ◀─▶ WhatsApp
+```
+
+Sections 1–3 below describe the older `backend/` (Node on a VPS) setup and
+are kept for reference.
+
+**Frontend on the custom domain**
+1. DNS: `CNAME chatbot → bayeziddev.github.io`.
+2. GitHub repo → Settings → Pages → Source: **GitHub Actions**; Custom domain:
+   `chatbot.sayadbayezid.com`; tick **Enforce HTTPS** (available a few minutes after
+   the DNS check passes).
+3. Push to `main` (anything under `frontend/`) or run the workflow by hand.
+
+**Backend**
+1. Repo secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (already used by
+   `deploy-backend-workers.yml`).
+2. Worker secrets: `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `ENCRYPTION_MASTER_KEY`,
+   and for QR linking `WA_GATEWAY_SECRET` (`npx wrangler secret put NAME` in
+   `backend-workers/`).
+3. Vars in `backend-workers/wrangler.jsonc`: `FRONTEND_URL` (already includes the
+   custom domain), `WA_GATEWAY_URL` (the gateway's public URL once deployed).
+4. Database changes apply themselves on the first request after a deploy
+   (`src/db/migrate.js`) — no manual SQL.
+5. Check: `https://fanchatbot-backend.<you>.workers.dev/api/health` → `{"ok":true}`.
+
+**WhatsApp QR gateway** — follow [whatsapp-gateway/README.md](../whatsapp-gateway/README.md)
+(Railway with a volume, or `docker run` on any VPS).
+
+## 1. Architecture in production (older Node backend)
 
 ```
 Customer's phone/app

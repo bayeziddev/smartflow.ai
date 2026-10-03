@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus, Loader2 } from 'lucide-react';
 import AuthLayout from '../components/shared/AuthLayout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { errorMessage } from '../services/api';
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -17,9 +18,9 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register(form);
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Could not create your account. Try again.');
+      setError(errorMessage(err, 'Could not create your account. Try again.'));
     } finally {
       setLoading(false);
     }
@@ -32,6 +33,8 @@ export default function RegisterPage() {
           <label className="mb-1.5 block text-xs font-medium text-ink-muted">Full name</label>
           <input
             required
+            name="name"
+            autoComplete="name"
             className="field-input"
             value={form.fullName}
             onChange={(e) => setForm({ ...form, fullName: e.target.value })}
@@ -41,6 +44,8 @@ export default function RegisterPage() {
         <div>
           <label className="mb-1.5 block text-xs font-medium text-ink-muted">Company (optional)</label>
           <input
+            name="organization"
+            autoComplete="organization"
             className="field-input"
             value={form.companyName}
             onChange={(e) => setForm({ ...form, companyName: e.target.value })}
@@ -51,6 +56,8 @@ export default function RegisterPage() {
           <label className="mb-1.5 block text-xs font-medium text-ink-muted">Email</label>
           <input
             type="email"
+            name="email"
+            autoComplete="email"
             required
             className="field-input"
             value={form.email}
@@ -62,6 +69,8 @@ export default function RegisterPage() {
           <label className="mb-1.5 block text-xs font-medium text-ink-muted">Password</label>
           <input
             type="password"
+            name="new-password"
+            autoComplete="new-password"
             required
             minLength={8}
             className="field-input"
@@ -79,18 +88,8 @@ export default function RegisterPage() {
         </button>
       </form>
 
-      <div className="my-5 flex items-center gap-3 text-xs text-ink-faint">
-        <div className="h-px flex-1 bg-void-border" />
-        or
-        <div className="h-px flex-1 bg-void-border" />
-      </div>
 
-      <a href="/api/auth/manus/login" className="btn-ghost w-full !border-void-border text-sm">
-        Continue with Manus
-      </a>
-      <p className="mt-2 text-center text-xs text-ink-faint">Manus is an optional AI account — most people just use email above.</p>
-
-      <p className="mt-6 text-center text-sm text-ink-muted">
+      <p className="mt-5 text-center text-sm text-ink-muted">
         Already have one?{' '}
         <Link to="/login" className="text-signal hover:underline">
           Sign in

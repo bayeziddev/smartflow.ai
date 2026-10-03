@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { MessageCircle, Send, Users, Mail, Loader2, MessagesSquare } from 'lucide-react';
+import { MessageCircle, Send, Users, Mail, Loader2, MessagesSquare, QrCode, FlaskConical } from 'lucide-react';
 import { fetchConversations, fetchConversationMessages } from '../../services/api';
 
 const CHANNEL_META = {
   whatsapp: { label: 'WhatsApp', Icon: MessageCircle },
+  whatsapp_qr: { label: 'WhatsApp (QR)', Icon: QrCode },
+  test: { label: 'Test chat', Icon: FlaskConical },
   telegram: { label: 'Telegram', Icon: Send },
   messenger: { label: 'Messenger', Icon: Users },
   email: { label: 'Email', Icon: Mail },

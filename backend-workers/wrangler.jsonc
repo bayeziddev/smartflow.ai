@@ -5,12 +5,16 @@
   "compatibility_flags": ["nodejs_compat"],
 
   "vars": {
-    // CORS (see src/index.js) checks the request's Origin header
-    // against this — must be the scheme+host only, no path, and no
-    // trailing slash (GitHub Pages serves this repo at
-    // https://chatbot.sayadbayezid.com/, but the Origin
-    // header on requests from that page is just the host part).
-    "FRONTEND_URL": "https://bayeziddev.github.io",
+    // CORS (see src/index.js): the websites allowed to call this API from a
+    // browser, comma-separated, each scheme+host only — no path, no
+    // trailing slash. The dashboard lives on the custom domain; the
+    // github.io origin stays for the redirect window, localhost for `npm run dev`.
+    "FRONTEND_URL": "https://chatbot.sayadbayezid.com,https://bayeziddev.github.io,http://localhost:5173",
+    // The WhatsApp QR gateway (whatsapp-gateway/), once deployed — e.g.
+    // "https://wa.sayadbayezid.com". Leave empty until it exists; the
+    // dashboard then shows how to set it up. Its shared secret is the
+    // WA_GATEWAY_SECRET Worker secret (see whatsapp-gateway/README.md).
+    "WA_GATEWAY_URL": "",
     "DB_HOST": "gateway01.ap-northeast-1.prod.aws.tidbcloud.com",
     "DB_PORT": "4000",
     "DB_DATABASE": "fanchatbot"
@@ -21,4 +25,5 @@
   //   DB_PASSWORD
   //   JWT_SECRET
   //   ENCRYPTION_MASTER_KEY
+  //   WA_GATEWAY_SECRET   (only when the WhatsApp QR gateway is deployed)
 }

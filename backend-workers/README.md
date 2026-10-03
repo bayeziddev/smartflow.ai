@@ -119,11 +119,49 @@ ENCRYPTION_MASTER_KEY=any-64-hex-chars-for-local-testing
 ```
 
 `DB_HOST` / `DB_PORT` / `DB_DATABASE` come from `wrangler.jsonc`'s
-`vars` as usual. Then:
+`vars` as usual (a value in `.dev.vars` overrides them). For a local
+MariaDB/MySQL without TLS also add `DB_SSL=false`. Then:
 
 ```bash
 npm run dev
 ```
+
+### Database schema updates itself
+
+You no longer run SQL by hand. On the first `/api/*` request after a
+deploy, `src/db/migrate.js` applies any pending step from its
+`MIGRATIONS` list (tables are created if missing, the channel lists are
+widened for WhatsApp QR, the automation tables are added) and records it
+in `schema_migrations`. Every step is safe to run twice. Set
+`AUTO_MIGRATE=false` to switch this off. `src/db/schema.sql` is kept as
+the readable reference.
+
+### Automated tests
+
+```bash
+# needs a MySQL/MariaDB user that may create databases
+TEST_DB_USER=sf TEST_DB_PASSWORD=sfpass npm test   # 18 tests, ~5 s
+npm run test:crypto                                  # no DB needed
+```
+
+The tests create a throw-away database (`TEST_DB_HOST`/`TEST_DB_PORT`
+default to 127.0.0.1:3306), drive the real Hono app with
+`app.request()`, stub outgoing `fetch` (AI providers, Meta Graph, the
+WhatsApp gateway), and drop the database afterwards.
+
+## Environment reference
+
+| Name | Where | Meaning |
+|---|---|---|
+| `FRONTEND_URL` | var | Comma-separated origins allowed by CORS — must include `https://chatbot.sayadbayezid.com` |
+| `DB_HOST` `DB_PORT` `DB_DATABASE` | var | TiDB / MySQL |
+| `DB_USER` `DB_PASSWORD` | secret | |
+| `DB_SSL` | var | `false` only for a local database without TLS |
+| `JWT_SECRET` | secret | signs login tokens (7 days) |
+| `ENCRYPTION_MASTER_KEY` | secret | 64 hex chars, encrypts tenants' API keys and channel tokens |
+| `WA_GATEWAY_URL` | var | public URL of `whatsapp-gateway/` — empty hides QR connect behind a "setup needed" note |
+| `WA_GATEWAY_SECRET` | secret | same value as the gateway's `GATEWAY_SECRET` |
+| `AUTO_MIGRATE` | var | `false` to skip automatic schema updates |
 
 ## What's deferred (not built in this pass)
 
@@ -142,6 +180,8 @@ npm run dev
   a flagged gap: it needs a place to store the tenant's own admin
   WhatsApp number to notify, separate from their business sending
   number. See the comment in that file.
+
+WhatsApp by QR code is built — see `../whatsapp-gateway/README.md`.
 
 None of these block WhatsApp or Messenger working — they're the next
 things to pick up, not prerequisites.

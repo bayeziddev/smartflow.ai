@@ -43,7 +43,7 @@ async function processInboundMessage(env, ctx, tenantId, from, displayName, text
       displayName,
       text,
     });
-    await sendMessage(env, ctx, tenantId, from, reply);
+    if (reply) await sendMessage(env, ctx, tenantId, from, reply); // null = bot paused
   } catch (err) {
     console.error('whatsapp_cloud_inbound_failed', tenantId, err.message);
   }

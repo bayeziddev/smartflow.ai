@@ -1,13 +1,7 @@
 # Smartgenchatbot — BYOK Multi-Channel AI Automation Platform
----
 
+**Live:** https://chatbot.sayadbayezid.com · **API:** https://fanchatbot-backend.sayadmdbayezidhosan.workers.dev/api/health
 
-
-Live Automation 
-
-
----
-![Live SmartgenFlwo.Ai](https://chatbot.sayadbayezid.com)
 **Lost track of where things stand? Read `docs/CASE-STUDY.md` first** —
 it's the full project journal: what's built, what's broken, every
 Meta/Cloudflare account involved and why, and the prioritized list of
@@ -30,7 +24,10 @@ fanchatbot-system/
 │                      (see backend-workers/README.md — this is the one to use if
 │                      you don't have/want a VPS)
 ├── frontend/    React + Vite + Tailwind dashboard and landing page (logged-in app)
-│                Deployed automatically to GitHub Pages — see deploy-frontend-pages.yml
+│                Deployed automatically to GitHub Pages on chatbot.sayadbayezid.com —
+│                see deploy-frontend-pages.yml (the CNAME lives in frontend/public/)
+├── whatsapp-gateway/  Always-on Node service that links a normal WhatsApp number by
+│                      QR code and relays messages to the backend (see its README)
 ├── marketing/   Public sales page — lifetime deal + Facebook Pixel (see marketing/README.md)
 └── docs/
     ├── DEPLOYMENT.md          Cloudflare setup + ongoing operations guide
@@ -41,6 +38,33 @@ fanchatbot-system/
                                 either in a browser and re-screenshot after
                                 editing text/colors, no build step needed
 ```
+
+## How replies work
+
+Every customer message — WhatsApp (official Cloud API or QR-linked number), Messenger,
+or the dashboard's **Test your bot** chat — goes through the same pipeline
+(`backend-workers/src/services/automationService.js`):
+
+1. **Paused?** (Automation → toggle) → saved, no reply.
+2. **Keyword rules** (Automation → Keyword auto replies) → instant fixed answer. Works with
+   no AI key. English and Bangla keywords.
+3. **AI** with your business name + instructions + the last 10 messages, using your own
+   keys (API Keys) with automatic failover between providers. Orders it confirms are saved
+   to Orders.
+4. **Fallback message** if no rule matches and AI is off or every key fails — so a customer
+   never gets silence.
+
+A brand-new customer also gets the welcome message once.
+
+## Custom domain checklist (chatbot.sayadbayezid.com)
+
+- DNS: `CNAME chatbot → bayeziddev.github.io` (DNS only / grey cloud if on Cloudflare).
+- GitHub → repo **Settings → Pages**: Source **GitHub Actions**, Custom domain
+  `chatbot.sayadbayezid.com`, **Enforce HTTPS** ticked.
+- The build serves from the domain root (`base: '/'` in `frontend/vite.config.js`) and ships
+  `frontend/public/CNAME`. Don't set `VITE_BASE` to a full URL — that blanks the page.
+- Backend CORS: `FRONTEND_URL` in `backend-workers/wrangler.jsonc` lists every origin the
+  dashboard is served from (comma-separated).
 
 ## Quickstart
 
@@ -65,6 +89,20 @@ Register an account at `http://localhost:5173/register`, then go to
 immediately and shown back to you masked from then on.
 
 ## What's been verified, not just written
+
+- `backend-workers/test/integration.test.mjs` (`npm test`, 18 tests) — runs the real
+  Worker app against a real MariaDB/MySQL: register/login/me/change-password, automatic
+  schema migrations (including upgrading an old database), CORS for the custom domain,
+  keyword rules (English + Bangla), AI replies with instructions/history/order capture,
+  AI failure → fallback, pause, WhatsApp QR connect/status/inbound with HMAC signatures,
+  the Cloud API webhook, CSV export.
+- `whatsapp-gateway/test/gateway.test.mjs` (`npm test`, 14 tests) — QR → connected,
+  replies to private chats only (no groups/status/own/old messages, no duplicates, order
+  kept), unlink/reconnect/restore after restart, signed HTTP API.
+- A browser end-to-end run (Playwright) of the built dashboard against the local Worker +
+  gateway: sign up, sign in, wrong password, automation settings/rules/test chat, pause,
+  QR connect → scan → connected → customer message answered → disconnect, CSV export,
+  change password, forged token rejected, phone-size menu.
 
 - `backend/scripts/test-crypto.js` — round-trips a secret through
   AES-256-GCM and confirms tampering with the ciphertext is rejected.
@@ -102,12 +140,12 @@ Short version:
 3. **Telegram/Email webhooks**: add a shared-secret check before these
    are reachable from the public internet — see the comments in
    `webhook.routes.js`.
-4. **WhatsApp**: use the official Cloud API (`whatsappCloudHandler.js`),
-   not the baileys/QR-code channel, for anything commercial — see
-   `docs/CHANNELS.md` for why, what it actually costs (free for
-   replying to customers), and the exact free Meta setup steps. The
-   baileys files only need `.wwebjs_auth/` on persistent disk if you
-   choose to use them instead.
+4. **WhatsApp**: two options, both on the Channels page. The official Cloud API
+   (`whatsappCloudHandler.js`) has no ban risk — see `docs/CHANNELS.md` for the
+   free Meta setup. **WhatsApp (QR scan)** links any normal WhatsApp number in a
+   minute but is unofficial; it needs `whatsapp-gateway/` deployed on an
+   always-on host with a persistent disk — see
+   [whatsapp-gateway/README.md](whatsapp-gateway/README.md).
 5. **`ALLOW_PLATFORM_TRIAL_KEY`**: leave this `false` unless you're
    deliberately subsidizing trial usage on your own key — see
    `backend/README.md` for the full reasoning.

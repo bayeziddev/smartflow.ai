@@ -1,0 +1,20 @@
+{
+  "name": "smartflow-whatsapp-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Links tenants' WhatsApp numbers by QR code (WhatsApp Web, via Baileys) and hands incoming messages to the SmartFlow backend for automated replies.",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "baileys": "7.0.0-rc14",
+    "pino": "^9.5.0",
+    "qrcode": "^1.5.4"
+  }
+}

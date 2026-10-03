@@ -26,10 +26,9 @@ async function openConnection(env) {
     database: env.DB_DATABASE,
     port: parseInt(env.DB_PORT || '4000'),
     disableEval: true,
-    ssl: {
-      minVersion: 'TLSv1.2',
-      rejectUnauthorized: true
-    }
+    // TiDB Cloud requires TLS. DB_SSL=false is only for a local MySQL/MariaDB
+    // during development and tests (see backend-workers/README.md).
+    ...(String(env.DB_SSL).toLowerCase() === 'false' ? {} : { ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: true } }),
   });
 }
 
@@ -70,4 +69,16 @@ export async function withConnection(env, ctx, fn) {
       await connection.end();
     }
   }
+}
+
+/**
+ * LIMIT / OFFSET values are written into the SQL rather than bound as `?`:
+ * prepared-statement LIMIT placeholders fail on some MySQL versions
+ * ("Incorrect arguments to mysqld_stmt_execute"). Clamping to an integer in
+ * range keeps that safe.
+ */
+export function clampInt(value, fallback, min, max) {
+  const n = Number.parseInt(value, 10);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
 }

@@ -31,7 +31,7 @@ async function processInboundMessage(env, ctx, tenantId, senderId, text) {
       displayName: null,
       text,
     });
-    await sendMessage(env, ctx, tenantId, senderId, reply);
+    if (reply) await sendMessage(env, ctx, tenantId, senderId, reply); // null = bot paused
   } catch (err) {
     console.error('messenger_inbound_failed', tenantId, err.message);
   }
