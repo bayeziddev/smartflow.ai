@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { MessageCircle, Send, Users, Mail, Loader2, ShieldCheck, Eye, EyeOff, Pencil } from 'lucide-react';
-import { fetchChannels, toggleChannel, saveChannelCredentials } from '../../services/api';
+import { MessageCircle, Send, Users, Mail, Loader2, ShieldCheck, Eye, EyeOff, Pencil, Copy, Check } from 'lucide-react';
+import { fetchChannels, toggleChannel, saveChannelCredentials, errorMessage } from '../../services/api';
+import WhatsappQrCard from '../../components/dashboard/WhatsappQrCard.jsx';
 
 const CHANNEL_META = {
   whatsapp: {
@@ -11,7 +12,7 @@ const CHANNEL_META = {
     identifierLabel: 'Phone Number ID',
     identifierField: 'phoneNumberId',
   },
-  telegram: { label: 'Telegram', Icon: Send, blurb: 'Webhook-based — replies go out the moment a message comes in.' },
+  telegram: { label: 'Telegram', Icon: Send, blurb: 'Webhook-based — replies go out the moment a message comes in.', comingSoon: true },
   messenger: {
     label: 'Messenger',
     Icon: Users,
@@ -20,9 +21,38 @@ const CHANNEL_META = {
     identifierLabel: 'Page ID',
     identifierField: 'pageId',
   },
-  email: { label: 'Email', Icon: Mail, blurb: 'SMTP replies to inbound messages from your support address.' },
+  email: { label: 'Email', Icon: Mail, blurb: 'SMTP replies to inbound messages from your support address.', comingSoon: true },
 };
-const CHANNEL_ORDER = ['whatsapp', 'telegram', 'messenger', 'email'];
+// whatsapp_qr is rendered by its own card, right after the official WhatsApp one.
+const CHANNEL_ORDER = ['whatsapp', 'whatsapp_qr', 'messenger', 'telegram', 'email'];
+
+// The URL to paste into Meta's webhook settings for this channel.
+function webhookUrl(channel) {
+  const base = import.meta.env.VITE_API_BASE_URL || `${window.location.origin}/api`;
+  return `${base.replace(/\/+$/, '')}/webhooks/${channel}`;
+}
+
+function CopyField({ value }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="flex items-center gap-2">
+      <code className="flex-1 truncate rounded-md bg-void-elevated px-2.5 py-1.5 text-[11px] text-ink-muted">{value}</code>
+      <button
+        type="button"
+        onClick={() => {
+          navigator.clipboard?.writeText(value).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          });
+        }}
+        className="btn-ghost !py-1.5 !px-2.5 text-xs"
+        aria-label="Copy webhook URL"
+      >
+        {copied ? <Check className="h-3.5 w-3.5 text-wire-on" /> : <Copy className="h-3.5 w-3.5" />}
+      </button>
+    </div>
+  );
+}
 
 const STATUS_STYLE = {
   connected: 'text-wire-on',
@@ -34,7 +64,9 @@ const STATUS_STYLE = {
 
 export default function ChannelsPage() {
   const [channels, setChannels] = useState([]);
+  const [gatewayConfigured, setGatewayConfigured] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [busy, setBusy] = useState(null);
   const [editingChannel, setEditingChannel] = useState(null);
   const [showToken, setShowToken] = useState(false);
@@ -42,9 +74,16 @@ export default function ChannelsPage() {
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
-    const data = await fetchChannels();
-    setChannels(data.channels);
-    setLoading(false);
+    try {
+      const data = await fetchChannels();
+      setChannels(data.channels);
+      setGatewayConfigured(!!data.whatsappQrGatewayConfigured);
+      setLoadError('');
+    } catch (err) {
+      setLoadError(errorMessage(err, 'Could not load your channels.'));
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -86,7 +125,7 @@ export default function ChannelsPage() {
       closeEditor();
       await load();
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Could not save these credentials — check them and try again.');
+      setError(errorMessage(err, 'Could not save these credentials — check them and try again.'));
     } finally {
       setBusy(null);
     }
@@ -95,15 +134,29 @@ export default function ChannelsPage() {
   return (
     <div>
       <h1 className="mb-1 font-display text-2xl font-semibold text-ink">Channels</h1>
-      <p className="mb-8 text-sm text-ink-muted">Turn on the channels you want your AI Router listening to.</p>
+      <p className="mb-8 text-sm text-ink-muted">
+        Connect where your customers message you. Every connected channel gets the same auto replies you set up in Automation.
+      </p>
 
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-ink-muted">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading channel status…
         </div>
+      ) : loadError ? (
+        <div className="panel p-8 text-center text-sm text-rose">{loadError}</div>
       ) : (
         <div className="space-y-3">
           {CHANNEL_ORDER.map((channel) => {
+            if (channel === 'whatsapp_qr') {
+              return (
+                <WhatsappQrCard
+                  key={channel}
+                  gatewayConfigured={gatewayConfigured}
+                  initial={channels.find((c) => c.channel === 'whatsapp_qr')}
+                  onChange={load}
+                />
+              );
+            }
             const meta = CHANNEL_META[channel];
             const state = channels.find((c) => c.channel === channel) || { isEnabled: false, status: 'disconnected' };
             const isBusy = busy === channel;
@@ -121,12 +174,13 @@ export default function ChannelsPage() {
                         {meta.label}
                         {meta.official && <ShieldCheck className="h-3.5 w-3.5 text-wire-on" />}
                       </p>
-                      <p className={`text-xs ${STATUS_STYLE[state.status] || 'text-ink-faint'}`}>
-                        {state.status.replace('_', ' ')}
+                      <p className={`text-xs ${meta.comingSoon ? 'text-ink-faint' : STATUS_STYLE[state.status] || 'text-ink-faint'}`}>
+                        {meta.comingSoon ? 'coming soon' : state.status.replace(/_/g, ' ')}
                       </p>
                     </div>
                   </div>
 
+                  {!meta.comingSoon && (
                   <div className="flex items-center gap-2">
                     {meta.official && (
                       <button onClick={() => openEditor(channel)} className="btn-ghost !py-1.5 !px-3 text-xs">
@@ -143,12 +197,13 @@ export default function ChannelsPage() {
                       aria-label={state.isEnabled ? `Disconnect ${meta.label}` : `Connect ${meta.label}`}
                     >
                       <span
-                        className={`absolute top-0.5 h-5 w-5 rounded-full bg-void transition-transform ${
+                        className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-void transition-transform ${
                           state.isEnabled ? 'translate-x-5' : 'translate-x-0.5'
                         }`}
                       />
                     </button>
                   </div>
+                  )}
                 </div>
 
                 <p className="mt-3 text-xs text-ink-faint">{meta.blurb}</p>
@@ -191,6 +246,10 @@ export default function ChannelsPage() {
                         onChange={(e) => setDraft({ ...draft, webhookVerifyToken: e.target.value })}
                         placeholder="Make one up — enter the same string in Meta's webhook settings"
                       />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-ink-muted">Webhook callback URL (paste into Meta)</label>
+                      <CopyField value={webhookUrl(channel)} />
                     </div>
                     {error && <p className="text-xs text-rose">{error}</p>}
                     <div className="flex gap-2">

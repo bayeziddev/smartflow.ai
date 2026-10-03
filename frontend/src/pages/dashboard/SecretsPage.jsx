@@ -147,7 +147,7 @@ export default function SecretsPage() {
                           aria-label={config.isActive ? 'Disable this provider' : 'Enable this provider'}
                         >
                           <span
-                            className={`absolute top-0.5 h-5 w-5 rounded-full bg-void transition-transform ${
+                            className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-void transition-transform ${
                               config.isActive ? 'translate-x-5' : 'translate-x-0.5'
                             }`}
                           />

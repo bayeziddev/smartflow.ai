@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 import LandingPage from './pages/LandingPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
@@ -12,6 +12,8 @@ import ChannelsPage from './pages/dashboard/ChannelsPage.jsx';
 import OrdersPage from './pages/dashboard/OrdersPage.jsx';
 import ConversationsPage from './pages/dashboard/ConversationsPage.jsx';
 import AdminClientsPage from './pages/dashboard/AdminClientsPage.jsx';
+import AutomationPage from './pages/dashboard/AutomationPage.jsx';
+import AccountPage from './pages/dashboard/AccountPage.jsx';
 import ProtectedRoute from './components/shared/ProtectedRoute.jsx';
 
 export default function App() {
@@ -31,12 +33,16 @@ export default function App() {
         }
       >
         <Route index element={<OverviewPage />} />
+        <Route path="automation" element={<AutomationPage />} />
+        <Route path="account" element={<AccountPage />} />
         <Route path="conversations" element={<ConversationsPage />} />
         <Route path="secrets" element={<SecretsPage />} />
         <Route path="channels" element={<ChannelsPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="admin/clients" element={<AdminClientsPage />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

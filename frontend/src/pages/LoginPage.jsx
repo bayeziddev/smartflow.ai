@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogIn, Loader2 } from 'lucide-react';
 import AuthLayout from '../components/shared/AuthLayout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { errorMessage } from '../services/api';
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,9 +19,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(form.email, form.password);
-      navigate('/dashboard');
+      // Back to the page that sent them here, if a protected route did.
+      navigate(location.state?.from?.pathname || '/dashboard', { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Could not sign in. Check your details and try again.');
+      setError(errorMessage(err, 'Could not sign in. Check your details and try again.'));
     } finally {
       setLoading(false);
     }
@@ -32,6 +35,8 @@ export default function LoginPage() {
           <label className="mb-1.5 block text-xs font-medium text-ink-muted">Email</label>
           <input
             type="email"
+            name="email"
+            autoComplete="email"
             required
             className="field-input"
             value={form.email}
@@ -43,6 +48,8 @@ export default function LoginPage() {
           <label className="mb-1.5 block text-xs font-medium text-ink-muted">Password</label>
           <input
             type="password"
+            name="password"
+            autoComplete="current-password"
             required
             className="field-input"
             value={form.password}
@@ -59,18 +66,8 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <div className="my-5 flex items-center gap-3 text-xs text-ink-faint">
-        <div className="h-px flex-1 bg-void-border" />
-        or
-        <div className="h-px flex-1 bg-void-border" />
-      </div>
 
-      <a href="/api/auth/manus/login" className="btn-ghost w-full !border-void-border text-sm">
-        Sign in with Manus
-      </a>
-      <p className="mt-2 text-center text-xs text-ink-faint">Manus is an optional AI account — most people just use email above.</p>
-
-      <p className="mt-6 text-center text-sm text-ink-muted">
+      <p className="mt-5 text-center text-sm text-ink-muted">
         New here?{' '}
         <Link to="/register" className="text-signal hover:underline">
           Create an account

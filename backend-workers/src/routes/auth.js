@@ -1,15 +1,30 @@
 import { Hono } from 'hono';
 import { sign } from 'hono/jwt';
+import { requireAuth } from '../middleware/requireAuth.js';
 import bcrypt from 'bcryptjs';
 import { query } from '../db/client.js';
 import { HttpError } from '../httpError.js';
 
 const auth = new Hono();
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const normaliseEmail = (e) => String(e || '').trim().toLowerCase();
+
+async function readJson(c) {
+  try {
+    return await c.req.json();
+  } catch {
+    throw new HttpError('Request body must be JSON', 400, 'INVALID_INPUT');
+  }
+}
+
 auth.post('/register', async (c) => {
-  const { email, password, companyName, fullName } = await c.req.json();
-  if (!email || !password || password.length < 8) {
-    throw new HttpError('email and a password of at least 8 characters are required', 400, 'INVALID_INPUT');
+  const body = await readJson(c);
+  const email = normaliseEmail(body.email);
+  const { password, companyName, fullName } = body;
+  if (!EMAIL_RE.test(email)) throw new HttpError('Enter a valid email address', 400, 'INVALID_INPUT');
+  if (!password || typeof password !== 'string' || password.length < 8) {
+    throw new HttpError('Use a password of at least 8 characters', 400, 'INVALID_INPUT');
   }
 
   const existing = await query(c.env, c.executionCtx, 'SELECT id FROM users WHERE email = ?', [email]);
@@ -30,12 +45,14 @@ auth.post('/register', async (c) => {
     c.env.JWT_SECRET,
     'HS256'
   );
-  return c.json({ token, tenantId: result.insertId }, 201);
+  return c.json({ token, tenantId: Number(result.insertId) }, 201);
 });
 
 auth.post('/login', async (c) => {
-  const { email, password } = await c.req.json();
-  if (!email || !password) throw new HttpError('email and password are required', 400, 'MISSING_CREDENTIALS');
+  const body = await readJson(c);
+  const email = normaliseEmail(body.email);
+  const { password } = body;
+  if (!email || !password) throw new HttpError('Enter your email and password', 400, 'MISSING_CREDENTIALS');
 
   const rows = await query(
     c.env,
@@ -59,7 +76,44 @@ auth.post('/login', async (c) => {
     c.env.JWT_SECRET,
     'HS256'
   );
-  return c.json({ token, tenantId: user.id });
+  return c.json({ token, tenantId: Number(user.id) });
+});
+
+/** The signed-in account — the dashboard calls this on load to confirm the saved session is still valid. */
+auth.get('/me', requireAuth, async (c) => {
+  const rows = await query(
+    c.env,
+    c.executionCtx,
+    'SELECT id, email, full_name, company_name, role, plan, is_platform_admin, created_at FROM users WHERE id = ? AND is_active = 1',
+    [c.get('tenantId')]
+  );
+  const u = rows[0];
+  if (!u) throw new HttpError('This account no longer exists', 401, 'UNAUTHENTICATED');
+  return c.json({
+    user: {
+      id: Number(u.id),
+      email: u.email,
+      fullName: u.full_name,
+      companyName: u.company_name,
+      role: u.role,
+      plan: u.plan,
+      isPlatformAdmin: !!u.is_platform_admin,
+      createdAt: u.created_at,
+    },
+  });
+});
+
+auth.post('/change-password', requireAuth, async (c) => {
+  const { currentPassword, newPassword } = await readJson(c);
+  if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8) {
+    throw new HttpError('Use a new password of at least 8 characters', 400, 'INVALID_INPUT');
+  }
+  const rows = await query(c.env, c.executionCtx, 'SELECT password_hash FROM users WHERE id = ?', [c.get('tenantId')]);
+  if (!rows[0]?.password_hash || !(await bcrypt.compare(String(currentPassword || ''), rows[0].password_hash))) {
+    throw new HttpError('Your current password is not correct', 400, 'INVALID_CREDENTIALS');
+  }
+  await query(c.env, c.executionCtx, 'UPDATE users SET password_hash = ? WHERE id = ?', [await bcrypt.hash(newPassword, 12), c.get('tenantId')]);
+  return c.json({ ok: true });
 });
 
 // Manus OAuth ("Sign in with Manus") is intentionally deferred in this

@@ -2,7 +2,7 @@
 
 ## WhatsApp: two different integrations exist in this codebase
 
-| | `whatsappCloudHandler.js` (official) | `whatsappWorker.js` + `whatsappManager.js` (baileys) |
+| | `whatsappCloudHandler.js` (official) | `whatsapp-gateway/` — "WhatsApp (QR scan)" (Baileys) |
 |---|---|---|
 | What it is | Meta's own Cloud API | Reverse-engineered WhatsApp Web protocol |
 | Approved by Meta? | Yes | No — against WhatsApp's Terms of Service |
@@ -10,10 +10,23 @@
 | Setup | Meta Developer account, no phone needed for testing | Scan a QR code with your own phone |
 | Cost | Free for replying to customers (see below) | Free, but you're paying with risk instead of money |
 
-**For a marketplace/commercial product, use the Cloud API.** It's what
-`docs/DEPLOYMENT.md` and this guide both assume from here. The baileys
-files are still in the repo in case you want them for a personal/low-
-stakes project, but don't ship a paying product on top of them.
+**For a marketplace/commercial product, prefer the Cloud API.** Both are
+available on the dashboard's Channels page and use the same automation
+(keyword rules → AI → fallback).
+
+### WhatsApp (QR scan) — how it works here
+
+The Worker can't hold a WhatsApp Web connection, so the small always-on
+service in `whatsapp-gateway/` does it (deploy guide in its README). The
+dashboard's **Connect with QR** button asks the backend, which asks the
+gateway (HMAC-signed), for a QR code; you scan it from WhatsApp → Linked
+devices. Incoming private messages go gateway → `POST
+/api/internal/whatsapp-qr/inbound` → automation → the reply goes back
+through the gateway. To keep the ban risk low it only answers people who
+message first, ignores groups, status updates and channels, shows
+"typing…" and marks messages read like a person would, and never sends
+bulk or unprompted messages. Sessions survive restarts (persistent
+`/data` volume); **Disconnect** unlinks the device and deletes the login.
 
 ## What this actually costs you
 
@@ -92,7 +105,6 @@ to launch for real.
 real database (see `scripts/test-channel-creds.js`-style checks). The
 API endpoint to save credentials exists too:
 `POST /api/channels/:channel/credentials` with `{ accessToken,
-phoneNumberId | pageId, webhookVerifyToken }`. What's left is a small
-form on the Channels page in the dashboard so you don't have to call
-that endpoint by hand with curl/Postman while testing — ask if you'd
-like that added next.
+phoneNumberId | pageId, webhookVerifyToken }`. The Channels page has
+the form for it (with the webhook callback URL to paste into Meta), and
+the Cloud API path is covered by `backend-workers/test/integration.test.mjs`.

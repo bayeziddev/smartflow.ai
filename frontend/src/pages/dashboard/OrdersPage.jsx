@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Receipt, Download, Loader2 } from 'lucide-react';
-import { fetchOrders, exportOrdersUrl } from '../../services/api';
+import { fetchOrders, downloadOrdersCsv, errorMessage } from '../../services/api';
 
-const CHANNEL_LABEL = { whatsapp: 'WhatsApp', telegram: 'Telegram', messenger: 'Messenger', email: 'Email' };
+const CHANNEL_LABEL = { whatsapp: 'WhatsApp', whatsapp_qr: 'WhatsApp (QR)', telegram: 'Telegram', messenger: 'Messenger', email: 'Email', test: 'Test chat' };
 
 function formatItems(items) {
   if (!Array.isArray(items)) return '—';
@@ -12,12 +12,25 @@ function formatItems(items) {
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      await downloadOrdersCsv();
+    } catch (err) {
+      alert(errorMessage(err, 'Could not export. Try again.'));
+    } finally {
+      setExporting(false);
+    }
+  }
 
   useEffect(() => {
-    fetchOrders().then((data) => {
-      setOrders(data.orders);
-      setLoading(false);
-    });
+    fetchOrders()
+      .then((data) => setOrders(data.orders))
+      .catch((err) => setError(errorMessage(err, 'Could not load orders.')))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -27,10 +40,10 @@ export default function OrdersPage() {
           <Receipt className="h-5 w-5 text-signal" strokeWidth={1.75} />
           <h1 className="font-display text-2xl font-semibold text-ink">Orders</h1>
         </div>
-        <a href={exportOrdersUrl()} className="btn-ghost !py-2 !px-4 text-sm">
-          <Download className="h-4 w-4" />
-          Export to Excel
-        </a>
+        <button type="button" onClick={handleExport} disabled={exporting} className="btn-ghost !py-2 !px-4 text-sm disabled:opacity-60">
+          {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          Export CSV
+        </button>
       </div>
       <p className="mb-8 text-sm text-ink-muted">
         Every order your AI confirms with a customer lands here automatically.
@@ -40,6 +53,8 @@ export default function OrdersPage() {
         <div className="flex items-center gap-2 text-sm text-ink-muted">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading orders…
         </div>
+      ) : error ? (
+        <div className="panel p-8 text-center text-sm text-rose">{error}</div>
       ) : orders.length === 0 ? (
         <div className="panel flex flex-col items-center gap-2 p-14 text-center">
           <Receipt className="h-6 w-6 text-ink-faint" />

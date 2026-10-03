@@ -6,7 +6,25 @@ Account Map" — those two sections will get you oriented fastest.*
 
 ---
 
-## Quick Status (as of this writing)
+## Update — October 2026
+
+- **Custom domain fixed.** `chatbot.sayadbayezid.com` showed a blank page: the build's
+  `base` was a full URL, which broke the router. It now builds for the domain root, the
+  `CNAME` ships inside the build (`frontend/public/CNAME`), and the backend's CORS allows
+  the custom domain.
+- **Automation that always answers:** keyword rules (work without any AI key, English +
+  Bangla) → AI with business instructions and chat history → fallback message. Welcome
+  message, pause switch and a "Test your bot" chat on the new **Automation** page.
+- **Login system** checked end to end: session verified with `/api/auth/me` on load,
+  forged/expired tokens are dropped, change password on the **Account** page, phone-size
+  dashboard menu. The broken "Sign in with Manus" buttons were removed.
+- **WhatsApp by QR scan** next to the official Cloud API: new `whatsapp-gateway/`
+  service + Channels page card (QR → scan → connected → auto replies → disconnect).
+  Needs deploying on an always-on host — see its README.
+- **Database updates itself** on deploy (`backend-workers/src/db/migrate.js`).
+- Tests: backend 18, gateway 14, plus a 20-step browser run — see the root README.
+
+## Quick Status (original, earlier session)
 
 **Working and verified:**
 - Backend logic (encryption, database, AI routing with failover, order

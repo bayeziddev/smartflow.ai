@@ -1,4 +1,4 @@
-import { query } from '../db/client.js';
+import { query, clampInt } from '../db/client.js';
 
 /**
  * One row per conversation, newest activity first, with a preview of
@@ -16,8 +16,8 @@ export async function listConversations(env, ctx, tenantId, { limit = 100, offse
      FROM sessions s
      WHERE s.tenant_id = ?
      ORDER BY s.last_message_at DESC
-     LIMIT ? OFFSET ?`,
-    [tenantId, Number(limit), Number(offset)]
+     LIMIT ${clampInt(limit, 100, 1, 500)} OFFSET ${clampInt(offset, 0, 0, 1_000_000)}`,
+    [tenantId]
   );
   return rows;
 }

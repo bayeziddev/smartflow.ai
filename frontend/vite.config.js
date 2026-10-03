@@ -1,14 +1,17 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// GitHub Pages serves project sites (not user/org sites) from a
-// /<repo-name>/ subpath, so every asset URL Vite emits needs that
-// prefix. Only applied for production builds — local dev still runs
-// at the root so `npm run dev` URLs don't change.
-const isGithubPagesBuild = process.env.GITHUB_PAGES === 'true';
+// The site is served from the root of its custom domain
+// (https://chatbot.sayadbayezid.com/ — see public/CNAME), so `base` stays
+// "/". It must be a path, never a full URL: React Router uses it as the
+// router basename (main.jsx), and a URL there matches no path at all,
+// which renders a blank page. Set VITE_BASE=/smartflow.ai/ only if the
+// site is ever served from bayeziddev.github.io/smartflow.ai/ without the
+// custom domain.
+const base = process.env.VITE_BASE || '/';
 
 export default defineConfig({
-  base: isGithubPagesBuild ? 'https://chatbot.sayadbayezid.com/' : '/',
+  base,
   plugins: [react()],
   server: {
     port: 5173,

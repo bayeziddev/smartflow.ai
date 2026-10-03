@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "db:init": "wrangler d1 execute --help || echo 'See README — schema is applied directly to your TiDB Cloud instance, not via wrangler'"
+    "db:init": "wrangler d1 execute --help || echo 'See README \u2014 schema is applied directly to your TiDB Cloud instance, not via wrangler'",
+    "test": "node --test test/*.test.mjs",
+    "test:crypto": "node scripts/test-crypto.mjs"
   },
   "dependencies": {
     "hono": "^4.6.9",
